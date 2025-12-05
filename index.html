@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html
+	lang="en"
+	xmlns:mso="urn:schemas-microsoft-com:office:office"
+	xmlns:msdt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882"
+>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Recall Check</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@400;700&d
+isplay=swap"
+			rel="stylesheet"
+		/>
+		<link
+			rel="stylesheet"
+			href="https://cdnjs.cloudflare.com/ajax/libs/font
+awesome/6.5.1/css/all.min.css"
+		/>
+		<!-- Embedded CSS -->
+		<style>
+			/* Skip link for accessibility */
+			.skip-link {
+				position: absolute;
+				top: -40px;
+				left: 6px;
+				background: var(--primary);
+				color: white;
+				padding: 8px;
+				text-decoration: none;
+				border-radius: 0 0 4px 4px;
+				z-index: 1000;
+				font-weight: bold;
+			}
+			.skip-link:focus {
+				top: 0;
+			}
+			/* Visually hidden content for screen readers */
+			.visually-hidden {
+				position: absolute !important;
+				width: 1px !important;
+				height: 1px !important;
+				padding: 0 !important;
+				margin: -1px !important;
+				overflow: hidden !important;
+				clip: rect(0, 0, 0, 0) !important;
+				white-space: nowrap !important;
+				border: 0 !important;
+			}
+			/* Simplified Recall Widget CSS */
+			.recall-widget {
+				--primary: #2256a0;
+				--secondary: #3c3c3b;
+				--bg: #e6e6e6;
+				--text: #000;
+				--border: #fff;
+				--spacing: 0.5rem;
+				font-family: "Archivo Narrow", sans-serif;
+				line-height: 1.5;
+				color: var(--text);
+				box-sizing: border-box;
+				width: 100%;
+				margin: 0;
+				padding: 0;
+			}
+			.recall-widget *,
+			.recall-widget *::before,
+			.recall-widget *::after {
+				box-sizing: inherit;
+				margin: 0;
+				padding: 0;
+			}
+			/* Accessibility */
+			.recall-widget *:focus-visible {
+				outline: 3px solid var(--primary);
+				outline-offset: 2px;
+			}
+			/* Layout */
+			.recall-widget .header-container {
+				position: relative;
+				width: 100%;
+				/* Fallback background color for when image doesn't load */
+				background-color: var(--primary);
+				min-height: 200px;
+			}
+			.recall-widget .header-image {
+				display: none;
+				width: 100%;
+				height: auto;
+			}
+			.recall-widget .header-overlay {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				display: flex; /* To hide the hero banner image: change 'flex' to 'none' */
+				flex-direction: column;
+				justify-content: center;
+				align-items: center;
+				text-align: center;
+				color: white;
+				/* Semi-transparent background for contrast when image fails to load */
+				background-color: rgba(34, 86, 160, 0.9);
+			}
+			.recall-widget .header-overlay h1 {
+				font-size: 2.5rem;
+				font-weight: bold;
+				margin: 0;
+				padding: 0 1rem;
+				text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+				line-height: 1.2;
+			}
+			@media (max-width: 767px) {
+				.recall-widget .header-overlay h1 {
+					display: none;
+				}
+			}
+			@media (min-width: 768px) and (max-width: 984px) {
+				.recall-widget .header-overlay h1 {
+					font-size: 2rem;
+				}
+			}
+			.recall-widget .steps-container {
+				display: grid;
+				gap: 1rem;
+				background-color: var(--border);
+				grid-template-columns: 1fr;
+			}
+			.recall-widget .step {
+				background-color: var(--bg);
+				padding: var(--spacing);
+				display: flex;
+				flex-direction: column;
+				align-items: flex-start;
+				position: relative;
+				opacity: 1;
+			}
+			.recall-widget .step > * {
+				max-width: 100%;
+			}
+			/* Headers */
+			.recall-widget .step-header {
+				margin-bottom: calc(var(--spacing) * 2);
+				width: 100%;
+				display: flex;
+				flex-direction: column;
+				align-items: flex-start;
+			}
+			.recall-widget .step-number {
+				font-size: 52px;
+				font-weight: bold;
+				line-height: 1.2;
+				margin: 5px 0;
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				white-space: nowrap;
+			}
+			.recall-widget .divider {
+				width: 20%;
+				height: 2px;
+				background-color: var(--text);
+				margin: 0 0 10px 0;
+				border: none;
+			}
+			.recall-widget .step-subtitle {
+				font-size: 2rem;
+				font-weight: bold;
+				margin-top: 10px;
+				text-transform: uppercase;
+			}
+			/* VIN visibility - Fixed scoping to avoid global HTML modifications */
+			.recall-widget:not(.has-vin-parameter)
+				.steps-container
+				.step:nth-child(2) {
+				visibility: hidden;
+			}
+			.recall-widget.step1-focused .steps-container .step:nth-child(2) {
+				visibility: visible;
+			}
+			/* Content elements */
+			.recall-widget .vin-image {
+				width: 100%;
+				max-width: 400px;
+				height: auto;
+				margin: 10px;
+			}
+			.recall-widget .vin-location-container {
+				padding: var(--spacing);
+				width: 100%;
+				max-width: 240px;
+			}
+			.recall-widget .vin-location-container h3,
+			.recall-widget .cta-section h3 {
+				font-size: 1.3rem;
+				margin-bottom: 0.5rem;
+				color: var(--primary);
+				width: 100%;
+				text-transform: uppercase;
+			}
+			#recall-widget-container {
+				margin: var(--spacing) 0;
+				padding: var(--spacing);
+				background-color: rgba(255, 255, 255, 0.5);
+				width: 100%;
+				max-width: 500px;
+			}
+			.recall-widget .cta-section {
+				padding: var(--spacing);
+				height: 100%;
+				display: flex;
+				flex-direction: column;
+				align-items: flex-start;
+			}
+			/* Phone link */
+			.recall-widget .phone-link {
+				display: inline-block;
+				color: var(--text);
+				text-decoration: none;
+				font-size: 2rem;
+				font-weight: bold;
+				padding: 0.5rem;
+				margin: 0.5rem 0 1rem;
+			}
+			.recall-widget .phone-link:hover,
+			.recall-widget .phone-link:focus {
+				background-color: rgba(255, 255, 255, 0.8);
+				text-decoration: underline;
+			}
+			/* Lists */
+			.recall-widget .checked-list {
+				list-style: none;
+				margin: 0;
+				flex-grow: 1;
+				text-align: left;
+				width: 100%;
+				max-width: 400px;
+			}
+			.recall-widget .checked-list li {
+				margin-bottom: 0.5rem;
+				padding-left: 1.5rem;
+				position: relative;
+				font-size: 1rem;
+			}
+			.recall-widget .checked-list li::before {
+				content: "-";
+				position: absolute;
+				left: 0;
+				color: var(--primary);
+				font-weight: bold;
+			}
+			/* Button */
+			.recall-widget .button {
+				background-color: var(--primary);
+				color: white;
+				padding: 1rem 2rem;
+				border: none;
+				border-radius: 4px;
+				font-size: 1.1rem;
+				font-weight: bold;
+				cursor: pointer;
+				text-decoration: none;
+				display: inline-block;
+				text-align: center;
+				margin-top: 1rem;
+				width: 100%;
+				max-width: 300px;
+			}
+			.recall-widget .button:hover,
+			.recall-widget .button:focus {
+				background-color: var(--secondary);
+			}
+			/* Mobile styles */
+			@media (max-width: 767px) {
+				.recall-widget .step {
+					min-height: auto;
+					padding: 20px;
+				}
+				.recall-widget .step,
+				.recall-widget .step-header,
+				.recall-widget .cta-section {
+					align-items: center;
+					text-align: center;
+				}
+				.recall-widget .step-number {
+					justify-content: center;
+				}
+				.recall-widget .divider {
+					margin: 0 auto 10px;
+				}
+				.recall-widget .phone-link {
+					width: 100%;
+					text-align: center;
+				}
+				.recall-widget .amenities-list,
+				.recall-widget .vin-location-list {
+					margin: 0 auto;
+					display: inline-block;
+					text-align: left;
+				}
+			}
+			/* Reduced motion support */
+			@media (prefers-reduced-motion: reduce) {
+				.recall-widget * {
+					animation-duration: 0.01ms !important;
+					animation-iteration-count: 1 !important;
+					transition-duration: 0.01ms !important;
+				}
+			}
+			/* Desktop styles */
+			@media (min-width: 768px) {
+				.recall-widget .header-image {
+					display: block;
+				}
+				.recall-widget .header-overlay {
+					/* Make overlay transparent when image is displayed */
+					background-color: transparent;
+				}
+				.recall-widget .steps-container {
+					grid-template-columns: repeat(3, 1fr);
+					gap: 2px;
+				}
+				.recall-widget .step {
+					min-height: 450px;
+					padding: 3rem;
+				}
+				.recall-widget .step-number {
+					font-size: 5dvw;
+				}
+				.recall-widget .step-subtitle {
+					font-size: 2.5dvw;
+				}
+				.recall-widget .button {
+					width: auto;
+					min-width: 250px;
+				}
+			}
+			@media (min-width: 985px) {
+				.recall-widget .step-number {
+					font-size: 64px;
+				}
+				.recall-widget .step-subtitle {
+					font-size: 36px;
+				}
+			}
+		</style>
+		<!--[if gte mso 9]><xml>
+<mso:CustomDocumentProperties>
+<mso:Order msdt:dt="string">21707600.0000000</mso:Order>
+<mso:ContentTypeId
+msdt:dt="string">0x0101004723F57B0247FA4B8B1F2103F6086FFC</mso:ContentT
+ypeId>
+</mso:CustomDocumentProperties>
+</xml><![endif]-->
+	</head>
+	<body>
+		<a href="#main-content" class="skip-link">Skip to main content</a>
+		<main class="recall-widget">
+			<!-- Main content -->
+			<div id="main-content">
+				<!-- Header image with overlay -->
+				<div class="header-container">
+					<img
+						src="https://media.recallmasters.com/webpage%20images/recall_topbanner_note
+xt.jpg"
+						class="header-image"
+						alt="Your Safety is Our Priority - Check Your Vehicle for Open Recalls"
+						width="1400"
+						height="250"
+					/>
+					<div class="header-overlay">
+						<h1>
+							Your Safety is Our Priority<br />Check Your Vehicle
+							for Open Recalls
+						</h1>
+					</div>
+				</div>
+				<!-- Steps section - simplified navigation -->
+				<div class="steps-container" role="list">
+					<!-- Step 1 -->
+					<section
+						class="step"
+						role="listitem"
+						aria-labelledby="step1-title"
+						tabindex="0"
+						autofocus
+					>
+						<header class="step-header">
+							<h2 class="step-number" id="step1-title">
+								<i class="fas fa-search" aria-hidden="true"></i
+								><span class="visually-hidden">Search icon</span
+								>&nbsp;STEP&nbsp;1
+							</h2>
+							<hr class="divider" aria-hidden="true" />
+							<h3 class="step-subtitle">
+								LOCATE YOUR
+								<abbr
+									title="Vehicle
+Identification Number"
+									>VIN</abbr
+								>
+							</h3>
+						</header>
+						<img
+							class="vin-image"
+							src="https://media.recallmasters.com/webpage+images/locate_vin_step_1.png"
+							alt="Visual guide showing common VIN locations on a vehicle"
+							width="400"
+							height="300"
+						/>
+						<div class="vin-location-container">
+							<h3>
+								Possible
+								<abbr title="Vehicle Identification Number"
+									>VIN</abbr
+								>
+								Locations
+							</h3>
+							<ul class="vin-location-list checked-list">
+								<li>Driver's Side Dashboard</li>
+								<li>Driver's Side Door jamb</li>
+								<li>Vehicle Insurance Card</li>
+								<li>Vehicle Title</li>
+								<li>Vehicle Registration Card</li>
+							</ul>
+						</div>
+					</section>
+					<!-- Step 2 -->
+					<section
+						class="step"
+						role="listitem"
+						aria-labelledby="step2-title"
+					>
+						<header class="step-header">
+							<h2 class="step-number" id="step2-title">
+								<i
+									class="far fa-check-circle"
+									aria-hidden="true"
+								></i
+								><span class="visually-hidden">Check icon</span
+								>&nbsp;STEP&nbsp;2
+							</h2>
+							<hr class="divider" aria-hidden="true" />
+							<h3 class="step-subtitle">
+								ENTER YOUR
+								<abbr
+									title="Vehicle
+Identification Number"
+									>VIN</abbr
+								>
+							</h3>
+						</header>
+						<div id="recall-widget-container">
+							<script
+								src="https://app.recallmasters.com/widget
+84fc48afd53926715d03574b6ef4b87430262ef9.js"
+								defer
+							></script>
+						</div>
+					</section>
+					<!-- Step 3 -->
+					<section
+						class="step"
+						role="listitem"
+						aria-labelledby="step3-title"
+					>
+						<header class="step-header">
+							<h2 class="step-number" id="step3-title">
+								<i class="fas fa-phone" aria-hidden="true"></i
+								><span class="visually-hidden">Phone icon</span
+								>&nbsp;STEP&nbsp;3
+							</h2>
+							<hr class="divider" aria-hidden="true" />
+							<h3 class="step-subtitle">CALL US</h3>
+						</header>
+						<div class="cta-section">
+							<h3>Recall Support Line:</h3>
+							<a
+								href="tel:19562761800"
+								class="phone-link"
+								aria-label="Call our Recall Support Line at 9562761800"
+							>
+								(956) 276-1800
+							</a>
+							<h3>WHY REMEDY YOUR RECALL WITH US?</h3>
+							<ul
+								class="amenities-list checked-list"
+								aria-label="Our Service
+Benefits"
+							>
+								<li>Complimentary Shuttle Service</li>
+								<li>Complimentary Loaner Vehicle</li>
+								<li>Complimentary Car Wash</li>
+								<li>
+									Complimentary Video Multi-Point Inspection
+								</li>
+								<li>
+									Complimentary Loaner Vehicles (ask for
+									details)
+								</li>
+								<li>
+									Free Wi-Fi and Cable TV's in the lounge area
+								</li>
+								<li>
+									Over 100 years combined technician expertise
+								</li>
+								<li>Complimentary Coffee and Refreshments</li>
+								<li>Expansive parts inventory</li>
+								<li>
+									Flexible scheduling and extended service
+									hours
+								</li>
+							</ul>
+							<a
+								href="https://scheduleanywhere1.dealer-fx.com/8252/search"
+								class="button"
+								target="_blank"
+								rel="noopener noreferrer"
+								aria-label="Schedule your service
+appointment"
+							>
+								CLICK HERE TO SCHEDULE SERVICE
+							</a>
+						</div>
+					</section>
+				</div>
+			</div>
+		</main>
+		<!-- Embedded JavaScript -->
+		<script>
+			 /* Function to focus on the first VIN input field */
+			 function focusVinInput() {
+			 var x = document.getElementsByClassName("vin1");
+			 if (x && x.length > 0) {
+			 x[0].focus();
+			 }
+			 }
+			 /* Function to add accessibility attributes to VIN input field (no visible text) */
+			 function enhanceVinInputAccessibility() {
+			 try {
+			 /* Look for VIN input by multiple selectors */
+			 let vinInput = document.getElementById('rmw-input-0');
+			 if (!vinInput) {
+			 /* Try other possible selectors */
+			 vinInput = document.querySelector('input[placeholder*="VIN"]');
+			 if (!vinInput) {
+			 vinInput = document.querySelector('.rmw-common-input');
+			 }
+			 }
+			 if (vinInput && !vinInput.hasAttribute('aria-label')) {
+			 /* Ensure input has a proper ID */
+			 let inputId = vinInput.id;
+			 if (!inputId) {
+			 inputId = 'vin-input-field';
+			 vinInput.id = inputId;
+			 }
+			 /* Add accessibility attributes to input (invisible to users but readable by
+			screen readers) */
+			 vinInput.setAttribute('required', 'true');
+			 vinInput.setAttribute('aria-label', 'Vehicle Identification Number');
+			 vinInput.setAttribute('aria-describedby', 'step2-title');
+			 vinInput.setAttribute('autocomplete', 'off');
+			 vinInput.setAttribute('type', 'text');
+			 vinInput.setAttribute('maxlength', '17');
+			 vinInput.setAttribute('pattern', '[A-HJ-NPR-Z0-9]{17}');
+			 vinInput.setAttribute('title', 'Please enter a 17-character Vehicle
+			Identification Number');
+			 console.log('VIN input accessibility enhanced. Input ID:', inputId);
+			 return true;
+			 }
+			 } catch (error) {
+			 console.log('Error enhancing VIN input accessibility:', error);
+			 return false;
+			 }
+			 return false;
+			 }
+			 /* Minimal widget functionality */
+			 document.addEventListener('DOMContentLoaded', function() {
+			 /* Get the widget container for scoped class management */
+			 const widgetContainer = document.querySelector('.recall-widget');
+			 if (!widgetContainer) return;
+			 /* Check for VIN parameter in URL */
+			 const hasVinParam = window.location.search.includes('vin=');
+			 if (hasVinParam) {
+			 widgetContainer.classList.add('has-vin-parameter');
+			 /* Wait for widget to load before focusing on VIN input */
+			 setTimeout(function() {
+			 focusVinInput();
+			 }, 1500);
+			 } else {
+			 /* Start with Step 1 focused */
+			 widgetContainer.classList.add('step1-focused');
+			 }
+			 /* Use MutationObserver to detect when VIN input is added to DOM */
+			 const targetNode = document.getElementById('recall-widget-container');
+			 if (targetNode) {
+			 const observer = new MutationObserver(function(mutations) {
+			 mutations.forEach(function(mutation) {
+			 if (mutation.type === 'childList') {
+			 mutation.addedNodes.forEach(function(node) {
+			 if (node.nodeType === Node.ELEMENT_NODE) {
+			 /* Check if this node or its descendants contain a VIN input */
+			 const inputs = node.querySelectorAll ?
+			node.querySelectorAll('input') : [];
+			 for (let input of inputs) {
+			 if (input.id === 'rmw-input-0' ||
+			 input.className.includes('rmw-common-input') ||
+			 (input.placeholder &&
+			input.placeholder.toLowerCase().includes('vin'))) {
+			 console.log('VIN input detected via MutationObserver:',
+			input);
+			 setTimeout(enhanceVinInputAccessibility, 100); /* Small
+			delay to ensure DOM is stable */
+			 return;
+			 }
+			 }
+			 }
+			 });
+			 }
+			 });
+			 });
+			 observer.observe(targetNode, {
+			 childList: true,
+			 subtree: true
+			 });
+			 /* Also keep polling as fallback */
+			 setTimeout(function() {
+			 let attempts = 0;
+			 const maxAttempts = 20;
+			 function pollForVinInput() {
+			 try {
+			 if (enhanceVinInputAccessibility()) {
+			 observer.disconnect(); /* Stop observing once successful */
+			 return;
+			 }
+			 attempts++;
+			 if (attempts < maxAttempts) {
+			 setTimeout(pollForVinInput, 300);
+			 } else {
+			 observer.disconnect(); /* Stop observing after max attempts */
+			 }
+			 } catch (error) {
+			 console.log('Polling error:', error);
+			 }
+			 }
+			 pollForVinInput();
+			 }, 1000); /* Start polling after 1 second */
+			 }
+			 /* Set autocomplete attributes when widget loads */
+			 setTimeout(function() {
+			 try {
+			 const nameField = document.getElementById('rmw-page2__name');
+			 if (nameField) nameField.setAttribute('autocomplete', 'name');
+			 const phoneField = document.getElementById('rmw-page2__phone');
+			 if (phoneField) phoneField.setAttribute('autocomplete', 'tel');
+			 } catch (error) {
+			 /* Silently fail */
+			 }
+			 }, 1000);
+			 });
+		</script>
+	</body>
+</html>
